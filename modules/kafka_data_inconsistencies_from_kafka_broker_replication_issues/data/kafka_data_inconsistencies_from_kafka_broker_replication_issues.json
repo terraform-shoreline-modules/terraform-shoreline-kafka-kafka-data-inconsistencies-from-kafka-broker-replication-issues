@@ -1,0 +1,138 @@
+{
+  "name": "kafka_data_inconsistencies_from_kafka_broker_replication_issues",
+  "description": "This incident type refers to situations where data inconsistencies arise due to issues with Kafka broker replication. Kafka brokers are responsible for replicating data across multiple nodes, ensuring that data is available even if one node fails. If there are issues with this replication process, it can result in data inconsistencies, where different nodes have different versions of the same data. This can cause a range of issues, including errors, data corruption, and other problems that can impact the functionality and reliability of the software system.",
+  "params": [
+    {
+      "name": "BROKER_ID",
+      "value": ""
+    },
+    {
+      "name": "GROUP_NAME",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_KAFKA_HOME_DIRECTORY",
+      "value": ""
+    },
+    {
+      "name": "BROKER_LIST",
+      "value": ""
+    },
+    {
+      "name": "TOPIC_NAME",
+      "value": ""
+    },
+    {
+      "name": "KAFKA_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "DESIRED_REPLICATION_FACTOR",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Kafka Data Inconsistencies from Kafka Broker Replication Issues.\nThis incident type refers to situations where data inconsistencies arise due to issues with Kafka broker replication. Kafka brokers are responsible for replicating data across multiple nodes, ensuring that data is available even if one node fails. If there are issues with this replication process, it can result in data inconsistencies, where different nodes have different versions of the same data. This can cause a range of issues, including errors, data corruption, and other problems that can impact the functionality and reliability of the software system."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Kafka broker is up and running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `systemctl status kafka`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the replication status of Kafka brokers"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-topics --describe --bootstrap-server ${BROKER_LIST} --topic ${TOPIC_NAME}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Kafka consumers"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-consumer-groups --bootstrap-server ${BROKER_LIST} --group ${GROUP_NAME} --describe`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check for any errors in the Kafka logs"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -f /var/log/kafka/kafka.log`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Kafka producers"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `kafka-console-producer --broker-list ${BROKER_LIST} --topic ${TOPIC_NAME}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Kafka cluster is not configured with enough replication factor, resulting in data inconsistencies when a broker goes down."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_kafka_replication_check($BROKER_ID, $PATH_TO_KAFKA_HOME_DIRECTORY, $TOPIC_NAME, $DESIRED_REPLICATION_FACTOR)"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the replication settings and configurations. Ensure that the replication factor is set to a value that can handle the expected load and that the Kafka brokers are properly configured to handle replication."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_kafka_replication($KAFKA_CONFIG_FILE, $DESIRED_REPLICATION_FACTOR)"
+    }
+  ]
+}
